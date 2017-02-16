@@ -16,6 +16,7 @@ import os
 import re
 import datetime
 import requests
+import unicodedata
 from bs4 import BeautifulSoup
 import pymongo
 
@@ -34,6 +35,7 @@ def make_request(url) :
 		r = requests.get(url)
 	except requests.exceptions.RequestException as e:
 		print(e)
+		print("sss")
 		sys.exit(1)
 
 	return r.content
@@ -47,7 +49,7 @@ def get_movies_titleid(content) :
 	:return: a list that contains movies titles
 	"""
 	# make soup
-	soup = BeautifulSoup(content, "lxml")
+	soup = BeautifulSoup(content)
 	titles = soup.find_all("div")
 
 	titles_list = []
@@ -80,7 +82,7 @@ def get_movie_name(links_list):
 
 	for link in links_list :
 		r = make_request(link)
-		soup = BeautifulSoup(r, "lxml")
+		soup = BeautifulSoup(r)
 		name = soup.find_all("h1", {"itemprop":"name"})
 		for n in name:
 			names.append(n.text.encode('utf-8'))
@@ -92,10 +94,13 @@ def main():
 	mov_titls = get_movies_titleid(r)
 	lks = get_movies_link(mov_titls)
 	nms = get_movie_name(lks)
-
+	#print(datetime.datetime)
 	# print movies links
 	for i in nms :
 		print(i)
+		#print(unicodedata.normalize("NFKD", i))
+	#print(datetie.datetime)
+	
 
 if __name__ == "__main__" :
 	main()
