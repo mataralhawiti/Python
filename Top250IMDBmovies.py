@@ -23,6 +23,7 @@ import pymongo
 top_movies_list_url = 'http://www.imdb.com/chart/top'
 main_url = 'http://www.imdb.com'
 movie_url = main_url+'/title/'
+location_url = '/locations?ref_=tt_dt_dt'
 #movies_list = []
 
 def make_request(url) :
@@ -35,7 +36,7 @@ def make_request(url) :
 		r = requests.get(url)
 	except requests.exceptions.RequestException as e:
 		print(e)
-		print("sss")
+		print("something is wrong, I could not make a request")
 		sys.exit(1)
 
 	return r.content
@@ -73,6 +74,7 @@ def get_movies_link(movies_titleid):
 
 	for movie in movies_titleid :
 		movies_links.append(movie_url+movie)
+		break
 
 	return movies_links
 
@@ -89,17 +91,87 @@ def get_movie_name(links_list):
 
 	return names
 
+def get_single_movie_Info(links_list):
+	r = make_request(links_list[0])
+	soup = BeautifulSoup(r)
+	#print(soup)
+	#name = soup.find_all("h1", {"itemprop":"name"}) #-- return : [] , 	#print(name[0].text)
+
+	name = soup.find("h1", {"itemprop":"name"}).text
+	year = soup.find(id = "titleYear").text
+
+	# -- get gener
+	gener_tm = soup.find_all("span", itemprop="genre")
+	gener = []
+	for i in gener_tm:
+		gener.append(i.text)
+
+	# -- get directors
+	director_tm = soup.find_all(itemprop="director")
+	director = []
+	for i in director_tm:
+		director.append(i.text.strip())
+
+	# -- get creators/writers
+	creator_tm = soup.find_all(itemprop="creator")
+	creator = []
+	for i in creator_tm:
+		creator.append(i.find(itemprop="name").text.strip())	
+	
+	# -- get the actors
+	actros_tm = soup.find_all(itemprop="actors")
+	actors = []
+	for i in actros_tm:
+		actors.append(i.text.strip().replace(",",""))
+
+	# --
+	metascore = soup.find("div", {"class":"metacriticScore score_favorable titleReviewBarSubItem"}).text.strip()
+
+	# -- Plot Keywords itemprop="keywords"
+	keywords_tm = soup.find_all("span", itemprop="keywords")
+	keywords = []
+	for i in keywords_tm:
+		keywords.append(i.text)
+
+	# -- filming locations (hard coded !!)
+	filming_locations_request = requests.get('http://www.imdb.com/title/tt0111161/locations?ref_=tt_dt_dt')
+	
+	filming_locations_soup = BeautifulSoup(filming_locations_request.content)
+
+	filming_locations_tm = filming_locations_soup.find_all("dt")
+	filming_locations = []
+	for i in filming_locations_tm :
+		filming_locations.append(i.text.strip())
+
+
+	############ print ############
+	#print(soup.find("h1"))
+	print(name)
+	print(year)
+	print(gener)
+	print(director)
+	print(creator)
+	print(actors)
+	print(metascore)
+	print(keywords)
+	print(filming_locations)
+
+	
+
 def main():
 	r = make_request(top_movies_list_url)
 	mov_titls = get_movies_titleid(r)
 	lks = get_movies_link(mov_titls)
-	nms = get_movie_name(lks)
-	#print(datetime.datetime)
-	# print movies links
-	for i in nms :
-		print(i)
-		#print(unicodedata.normalize("NFKD", i))
-	#print(datetie.datetime)
+	
+	print("getting moives name ..", datetime.datetime.now())
+	print("------------------------------------------------")
+	#nms = get_movie_name(lks)
+	
+	nms = get_single_movie_Info(lks)
+	# print("printing movies names", datetime.datetime.now())
+	# print(nms)
+	# for i in nms :
+	# 	print(i.text)
 	
 
 if __name__ == "__main__" :
