@@ -148,6 +148,8 @@ def get_single_movie_Info(links_list):
 	#print(soup.find("h1"))
 	print(name)
 	print(year)
+	print('rate')
+	print('rate count')
 	print(gener)
 	print(director)
 	print(creator)
