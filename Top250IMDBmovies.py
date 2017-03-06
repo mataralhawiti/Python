@@ -14,6 +14,7 @@ __author__ = 'Matar'
 import sys
 import os
 import re
+import json
 import datetime
 import requests
 import unicodedata
@@ -88,77 +89,75 @@ def get_movie_name(links_list):
 		name = soup.find_all("h1", {"itemprop":"name"})
 		for n in name:
 			names.append(n.text.encode('utf-8'))
-
 	return names
 
 def get_single_movie_Info(links_list):
-	r = make_request(links_list[0])
+	movie_info = {}
+	mv_link = links_list[0]
+	r = make_request(mv_link)
 	soup = BeautifulSoup(r)
-	#print(soup)
 	#name = soup.find_all("h1", {"itemprop":"name"}) #-- return : [] , 	#print(name[0].text)
 
 	name = soup.find("h1", {"itemprop":"name"}).text
+	rank = soup.find(href="/chart/top?ref_=tt_awd").text 
 	year = soup.find(id = "titleYear").text
-
-	# -- get gener
+	rating = soup.find(itemprop="ratingValue").text
+	rating_Count = soup.find(itemprop="ratingCount").text.strip().replace(",","")
 	gener_tm = soup.find_all("span", itemprop="genre")
 	gener = []
 	for i in gener_tm:
 		gener.append(i.text)
 
-	# -- get directors
 	director_tm = soup.find_all(itemprop="director")
 	director = []
 	for i in director_tm:
 		director.append(i.text.strip())
 
-	# -- get creators/writers
 	creator_tm = soup.find_all(itemprop="creator")
 	creator = []
 	for i in creator_tm:
 		creator.append(i.find(itemprop="name").text.strip())	
-	
-	# -- get the actors
+
 	actros_tm = soup.find_all(itemprop="actors")
 	actors = []
 	for i in actros_tm:
 		actors.append(i.text.strip().replace(",",""))
 
-	# --
 	metascore = soup.find("div", {"class":"metacriticScore score_favorable titleReviewBarSubItem"}).text.strip()
-
-	# -- Plot Keywords itemprop="keywords"
 	keywords_tm = soup.find_all("span", itemprop="keywords")
 	keywords = []
 	for i in keywords_tm:
 		keywords.append(i.text)
 
-	# -- filming locations (hard coded !!)
-	filming_locations_request = requests.get('http://www.imdb.com/title/tt0111161/locations?ref_=tt_dt_dt')
-	
+	filming_locations_request = requests.get(mv_link+location_url)
 	filming_locations_soup = BeautifulSoup(filming_locations_request.content)
-
 	filming_locations_tm = filming_locations_soup.find_all("dt")
 	filming_locations = []
 	for i in filming_locations_tm :
 		filming_locations.append(i.text.strip())
 
+	Storyline = soup.find("div", {"class":"inline canwrap", "itemprop":"description"}).text.strip()
+	tag = soup.find("div", {"class":"txt-block"}).text.replace("Taglines:","").strip()
 
-	############ print ############
-	#print(soup.find("h1"))
-	print(name)
-	print(year)
-	print('rate')
-	print('rate count')
-	print(gener)
-	print(director)
-	print(creator)
-	print(actors)
-	print(metascore)
-	print(keywords)
-	print(filming_locations)
 
-	
+
+	movie_info = {
+		"rank" : int(re.sub(r'\D', "",rank)),
+		"name": name,
+		"year" : int(re.sub(r'\D', "",year)),
+		"rating" : float(rating) ,
+		"rating_Count" : int(rating_Count) ,
+		"gener" : gener,
+		"director" : director,
+		"creator" : creator,
+		"actors" : actors,
+		"metascore" : int(metascore),
+		"keywords" : keywords,
+		"filming_locations" : filming_locations,
+		"Storyline" : Storyline,
+		"tag" : tag
+	}
+	print(json.dumps(movie_info,sort_keys=True, indent=4))
 
 def main():
 	r = make_request(top_movies_list_url)
@@ -167,9 +166,9 @@ def main():
 	
 	print("getting moives name ..", datetime.datetime.now())
 	print("------------------------------------------------")
-	#nms = get_movie_name(lks)
-	
 	nms = get_single_movie_Info(lks)
+
+	#nms = get_movie_name(lks)
 	# print("printing movies names", datetime.datetime.now())
 	# print(nms)
 	# for i in nms :
