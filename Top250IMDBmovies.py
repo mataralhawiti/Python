@@ -2,12 +2,18 @@
 # -*- coding: utf-8 -*-
 
 '''
+mini project where I'm trying to learn scraping a website with BeautifulSoup lib,
+store the data in MongoDB, then do some analysis and viz on the pulled data. 
+
 To-do :
 # scrape Top250 list from IMDB using Requests&BS4 modules
 # Store the data in MongoDB
 # use pymongo module to mainpulate data
 # use Pandas, NumPy to analyze & plot data
 # use IPython
+# use Superset from Airbnb to viz the data
+# use D3.js to viz the data
+# try to do some fun stuff with NLP
 '''
 
 __author__ = 'Matar'
