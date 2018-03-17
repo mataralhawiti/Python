@@ -5,7 +5,6 @@ import sys
 import os
 
 
-
 # make a request :: 'http://pythonpodcast.com/'
 def makeReq(path) :
 	r = requests.get(path)
